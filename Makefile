@@ -2,8 +2,11 @@ PACKAGES=batteries,str
 SOURCES=day01.ml
 
 
-all: $(SOURCES:.ml=.byte)
+all: byte
 	@echo "Merry Christmas!"
+
+byte: $(SOURCES:.ml=.byte)
+
 
 native: $(SOURCES:.ml=.native)
 
