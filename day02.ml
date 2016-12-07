@@ -2,7 +2,8 @@ open Batteries
 
 type direction = L | R | U | D
 
-let move_grid = function
+let move_grid button dir =
+  match button, dir with
   | 1, R -> 2
   | 1, D -> 4
   | 1, _ -> 1
@@ -46,7 +47,8 @@ let move_grid = function
 
   | _, _ -> raise (Invalid_argument "Number out of range")
 
-let move_cross = function
+let move_cross button dir =
+  match button, dir with
   | 1, D -> 3
   | 1, _ -> 1
               
@@ -115,26 +117,23 @@ let print_hex n =
   Printf.printf "%x" n
                                                            
 let _ =
-  let grid_button = ref 5
-  and cross_button = ref 5
+  let buttons = ref (5, 5)
   and grid_password = ref []
   and cross_password = ref [] in
-  try
-    while true do
-      let line = read_line () in
-      let dirs = BatList.map c2d (BatString.to_list line) in
-      grid_button := BatList.fold_left (fun key dir -> move_grid (key, dir)) !grid_button dirs;
-      grid_password := !grid_button :: !grid_password;
-      cross_button := BatList.fold_left (fun key dir -> move_cross (key, dir)) !cross_button dirs;
-      cross_password := !cross_button :: !cross_password
-    done
-  with End_of_file ->
-    print_string "Part 1: ";
-    List.iter print_int (List.rev !grid_password);
-    print_newline ();
-    print_string "Part 2: ";
-    List.iter print_hex (List.rev !cross_password);
-    print_newline ();
+  input_lines Pervasives.stdin |>
+    BatEnum.iter (fun line ->
+        let dirs = BatString.to_list line |> BatList.map c2d in
+        buttons := BatList.fold_left (fun (grid,cross) dir ->
+                       (move_grid grid dir,
+                        move_cross cross dir)) !buttons dirs;
+      grid_password := fst !buttons :: !grid_password;
+      cross_password := snd !buttons :: !cross_password);
+  print_string "Part 1: ";
+  List.iter print_int (List.rev !grid_password);
+  print_newline ();
+  print_string "Part 2: ";
+  List.iter print_hex (List.rev !cross_password);
+  print_newline ();
     
                                     
             
