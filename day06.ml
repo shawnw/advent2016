@@ -10,12 +10,10 @@ let _ =
              (function Some i -> Some (i + 1) | None -> Some 1)
              cols.(i)));
   BatArray.iter (fun tbl ->
-      let ch, v = BatHashtbl.enum tbl |>
-                    BatEnum.reduce (fun (ch1, v1) (ch2, v2) ->
-                        if v1 > v2 then
-                          (ch1, v1)
-                        else
-                          (ch2, v2)) in
-      print_char ch) cols;
+      let ch, v = 
+        BatHashtbl.fold (fun ch v mx ->
+            if v > snd mx then (ch, v) else mx) tbl ('_', -1) in
+        print_char ch) cols;
   print_newline ()
+                
                                  
