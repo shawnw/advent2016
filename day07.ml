@@ -74,7 +74,8 @@ let tlstests = [ "abba[mnop]qrst";
 let ssltests = [ "aba[bab]xyz";
                  "xyx[xyx]xyx";
                  "aaa[kek]eke";
-                 "zazbz[bzb]cdb"
+                 "zazbz[bzb]cdb";
+                 "aba[xyz]bab[cat]dog"
                ]
                  
 let run_tests () =
