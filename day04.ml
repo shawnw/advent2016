@@ -14,8 +14,7 @@ let room_name s =
 let sector_id s =
   let opbr = BatString.index s '[' in
   let lastdash = BatString.rindex_from s opbr '-' in
-  let id = BatString.sub s (lastdash + 1) (opbr - lastdash - 1) in
-  int_of_string id
+  BatString.sub s (lastdash + 1) (opbr - lastdash - 1) |> int_of_string
                   
 let calc_checksum freqs =
   let cmp a b =
@@ -23,8 +22,7 @@ let calc_checksum freqs =
     | 0 -> compare (fst a) (fst b)
     | x -> x in
   let byfreq = BatHashtbl.enum freqs |> BatList.of_enum |> BatList.sort cmp in
-  let first = BatList.take 5 byfreq |> BatList.map fst in
-  BatString.of_list first
+  BatList.take 5 byfreq |> BatList.map fst |> BatString.of_list
                                                                    
 let is_real room =
   let name = designator room
@@ -46,22 +44,18 @@ let decrypt_name enc rot =
   BatString.map rotate enc
 
 let _ =
-  let sumsecs = ref 0 in
   let storagesec = ref (-1) in
-  try
-    while true do
-      let room = read_line () in
-      if is_real room then begin
+  let sumsecs =
+    BatEnum.fold (fun sum room ->
+        if is_real room then
           let id = sector_id room in
           let decrypted = decrypt_name (room_name room) id in
           if BatString.exists decrypted "northpole" then
             storagesec := id;
-          sumsecs := !sumsecs + id;
-        end
-    done
-  with
-  | End_of_file ->
-     Printf.printf "Part 1: %d\nPart 2: %d\n" !sumsecs !storagesec
+          sum + id
+          else
+            sum) 0 (input_lines Pervasives.stdin) in
+  Printf.printf "Part 1: %d\nPart 2: %d\n" sumsecs !storagesec
                    
       
                   
