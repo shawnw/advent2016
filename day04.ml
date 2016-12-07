@@ -7,6 +7,10 @@ let checksum s =
 let designator s =
   BatString.rchop ~n:7 s
 
+let room_name s =
+  let n = BatString.rindex s '-' in
+  BatString.rchop ~n s
+  
 let sector_id s =
   let opbr = BatString.index s '[' in
   let lastdash = BatString.rindex_from s opbr '-' in
@@ -33,20 +37,31 @@ let is_real room =
   BatString.iter update_freq name;
   let found = calc_checksum freqs in
   found = chksum
-            
+
+let decrypt_name enc rot =
+  let letters = "abcdefghijklmnopqrstuvwxyz" in
+  let rotate = function
+    | '-' -> ' '
+    | ch -> letters.[((BatString.index letters ch) + rot) mod 26] in
+  BatString.map rotate enc
+
 let _ =
   let sumsecs = ref 0 in
+  let storagesec = ref (-1) in
   try
     while true do
       let room = read_line () in
       if is_real room then begin
-        sumsecs := !sumsecs + (sector_id room)
+          let id = sector_id room in
+          let decrypted = decrypt_name (room_name room) id in
+          if BatString.exists decrypted "northpole" then
+            storagesec := id;
+          sumsecs := !sumsecs + id;
         end
     done
   with
   | End_of_file ->
-     print_string "Part 1: ";
-     print_int !sumsecs;
-     print_newline ()
+     Printf.printf "Part 1: %d\nPart 2: %d\n" !sumsecs !storagesec
+                   
       
                   
