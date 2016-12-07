@@ -1,3 +1,5 @@
+(* % ./day03.byte [2] < day03.txt *)
+
 open Batteries
 
 type triangle = { a: int; b : int; c : int }

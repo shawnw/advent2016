@@ -1,3 +1,5 @@
+(* % ./day04.byte < day04.txt *)
+
 open Batteries
 
 let checksum s =

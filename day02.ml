@@ -1,3 +1,5 @@
+(* % ./day02.byte < day02.txt *)
+
 open Batteries
 
 type direction = L | R | U | D

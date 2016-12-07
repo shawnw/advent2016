@@ -1,3 +1,5 @@
+(* % ./day06.byte < day06.txt *)
+
 open Batteries
 
 let _ =

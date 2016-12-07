@@ -1,3 +1,5 @@
+(* % ./day07.byte [2] < day07.txt *)
+
 open Batteries
 
        (* Let's be different and not use regular expressions! *)

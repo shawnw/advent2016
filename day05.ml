@@ -1,3 +1,5 @@
+(* % ./day05.native INPUT *)
+
 open Batteries
 
 let is_magic md5 =

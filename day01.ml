@@ -1,3 +1,5 @@
+(* % ./day01.byte < day01.txt *)
+
 open Batteries
 
 type pair = { x : int; y : int }
