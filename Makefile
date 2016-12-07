@@ -1,5 +1,5 @@
 PACKAGES=batteries,str
-SOURCES=day01.ml
+SOURCES=day01.ml day02.ml
 
 
 all: byte
