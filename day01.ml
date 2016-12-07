@@ -34,9 +34,9 @@ let re = Str.regexp " *\\([LR]\\)\\([0-9]+\\) *"
 
 let move dir (d, pos) = 
   if Str.string_match re dir 0 then begin
-    let r = Str.matched_group 1 dir 
-    and dist = int_of_string (Str.matched_group 2 dir) in
-    let newdir = new_direction d (to_direction r) in
+    let r = Str.matched_group 1 dir |> to_direction
+    and dist = Str.matched_group 2 dir |> int_of_string in
+    let newdir = new_direction d r in
     (newdir, adjust newdir dist pos)
   end else
     raise (Invalid_argument ("Invalid direction string: " ^ dir))
@@ -84,12 +84,12 @@ let main () =
   let startc = {x = 0; y = 0 }
   and currc = ref (North, { x = 0; y = 0 })
   and dirs = BatString.nsplit (input_all Pervasives.stdin) "," in
-  List.iter (fun d -> currc := move d !currc) dirs;
-  Printf.printf "Ending coordinates: x = %d, y = %d\n" (snd !currc).x (snd !currc).y;
-  Printf.printf "Distance: %d\n" (taxi startc (snd !currc));
+  BatList.iter (fun d -> currc := move d !currc) dirs;
+  BatPrintf.printf "Ending coordinates: x = %d, y = %d\n" (snd !currc).x (snd !currc).y;
+  BatPrintf.printf "Distance: %d\n" (taxi startc (snd !currc));
   let repeat = first_repeat dirs (North, { x = 0; y = 0}) in
-  Printf.printf "First repeated coordinate: x = %d, y = %d\n" repeat.x repeat.y;
-  Printf.printf "Distance: %d\n" (taxi startc repeat)
+  BatPrintf.printf "First repeated coordinate: x = %d, y = %d\n" repeat.x repeat.y;
+  BatPrintf.printf "Distance: %d\n" (taxi startc repeat)
 
 let _ = main ()
       
