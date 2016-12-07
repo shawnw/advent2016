@@ -14,7 +14,7 @@ clean:
 	rm -rf _build
 
 %.byte : %.ml
-	ocamlbuild -use-ocamlfind $@ -pkgs $(PACKAGES)
+	ocamlbuild -use-ocamlfind -cflags -safe-string $@ -pkgs $(PACKAGES)
 
 %.native: %.ml
-	ocamlbuild -cflags -unsafe -use-ocamlfind $@ -pkgs $(PACKAGES)
+	ocamlbuild -cflags -unsafe,-safe-string -use-ocamlfind $@ -pkgs $(PACKAGES)

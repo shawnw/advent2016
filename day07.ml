@@ -1,4 +1,4 @@
-(* % ./day07.byte [2] < day07.txt *)
+(* % ./day07.byte < day07.txt *)
 
 open Batteries
 
@@ -53,11 +53,11 @@ let has_ssl addr =
         in_hypernet := false
       else if addr.[n] = addr.[n+2] && addr.[n] <> addr.[n+1] &&
                 !in_hypernet = false && BatChar.is_letter addr.[n+1] then
-          let bab = String.create 3 in
-          bab.[0] <- addr.[n+1];
-          bab.[1] <- addr.[n];
-          bab.[2] <- addr.[n+1];
-          if in_brackets addr bab then
+          let bab = Bytes.create 3 in
+          Bytes.set bab 0 addr.[n+1];
+          Bytes.set bab 1 addr.[n];
+          Bytes.set bab 2 addr.[n+1];
+          if in_brackets addr (Bytes.to_string bab) then
             raise Found
     done;
     false
@@ -87,11 +87,11 @@ let run_tests () =
 
 let _ =
   run_tests ();
-  let mode = if Array.length Sys.argv = 1 then "TLS" else "SSL"
-  and f = if Array.length Sys.argv = 1 then has_tls else has_ssl in
-  let n =
-    input_lines Pervasives.stdin |> BatEnum.filter f |> BatEnum.count in
-  Printf.printf "Supports %s: %d\n" mode n
+  let tls_enum = BatIO.lines_of stdin in
+  let ssl_enum = BatEnum.clone tls_enum in
+  let tls_count = BatEnum.filter has_tls tls_enum |> BatEnum.count
+  and ssl_count = BatEnum.filter has_ssl ssl_enum |> BatEnum.count in
+  Printf.printf "Supports TLS: %d\nSupports SSL: %d\n" tls_count ssl_count
   
                 
                   
