@@ -3,7 +3,10 @@ open Batteries
 type triangle = { a: int; b : int; c : int }
 
 let make_triangle a' b' c' = { a = a'; b = b'; c = c' }
-                  
+
+let triangle_of_string str =
+  Scanf.sscanf str " %d %d %d" make_triangle
+                               
 let read_triangle_by_row () =
   Scanf.scanf " %d %d %d" make_triangle
 
@@ -18,17 +21,12 @@ let is_triangle tri =
   && (tri.b + tri.c > tri.a)
 
 let part1 () =
-  let tris = ref 0 in
-  try
-    while true do
-      let t = read_triangle_by_row () in
-      if is_triangle t then
-        incr tris
-    done
-  with
-  | End_of_file -> print_string "Part 1: ";
-                   print_int !tris;
-                   print_newline ()
+  let tris = BatEnum.fold (fun sum line ->
+                 if triangle_of_string line |> is_triangle then
+                   sum + 1
+                 else
+                   sum) 0 (input_lines Pervasives.stdin) in
+  Printf.printf "Part 1: %d\n" tris
 
 let part2 () =
   let tris = ref 0 in
