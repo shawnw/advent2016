@@ -4,7 +4,7 @@ open Batteries
 
 let _ =
   let cols = BatArray.init 8 (function _ -> BatHashtbl.create 26) in
-  input_lines Pervasives.stdin |>
+  BatIO.lines_of stdin |>
     BatEnum.iter
       (BatString.iteri (fun i ch ->
            BatHashtbl.modify_opt

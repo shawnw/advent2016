@@ -23,11 +23,12 @@ let is_triangle tri =
   && (tri.b + tri.c > tri.a)
 
 let part1 () =
-  let tris = BatEnum.fold (fun sum line ->
-                 if triangle_of_string line |> is_triangle then
-                   sum + 1
-                 else
-                   sum) 0 (input_lines Pervasives.stdin) in
+  let tris = BatIO.lines_of stdin |>
+               BatEnum.fold (fun sum line ->
+                   if triangle_of_string line |> is_triangle then
+                     sum + 1
+                   else
+                     sum) 0 in
   Printf.printf "Part 1: %d\n" tris
 
 let part2 () =

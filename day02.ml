@@ -122,14 +122,14 @@ let _ =
   let buttons = ref (5, 5)
   and grid_password = ref []
   and cross_password = ref [] in
-  input_lines Pervasives.stdin |>
+  BatIO.lines_of stdin |>
     BatEnum.iter (fun line ->
         let dirs = BatString.to_list line |> BatList.map c2d in
         buttons := BatList.fold_left (fun (grid,cross) dir ->
                        (move_grid grid dir,
                         move_cross cross dir)) !buttons dirs;
-      grid_password := fst !buttons :: !grid_password;
-      cross_password := snd !buttons :: !cross_password);
+        grid_password := fst !buttons :: !grid_password;
+        cross_password := snd !buttons :: !cross_password);
   print_string "Part 1: ";
   List.iter print_int (List.rev !grid_password);
   print_newline ();

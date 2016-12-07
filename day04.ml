@@ -48,15 +48,16 @@ let decrypt_name enc rot =
 let _ =
   let storagesec = ref (-1) in
   let sumsecs =
-    BatEnum.fold (fun sum room ->
-        if is_real room then
-          let id = sector_id room in
-          let decrypted = decrypt_name (room_name room) id in
-          if BatString.exists decrypted "northpole" then
-            storagesec := id;
-          sum + id
-          else
-            sum) 0 (input_lines Pervasives.stdin) in
+    BatIO.lines_of stdin |>
+      BatEnum.fold (fun sum room ->
+          if is_real room then
+            let id = sector_id room in
+            let decrypted = decrypt_name (room_name room) id in
+            if BatString.exists decrypted "northpole" then
+              storagesec := id;
+            sum + id
+            else
+              sum) 0 in
   Printf.printf "Part 1: %d\nPart 2: %d\n" sumsecs !storagesec
                    
       
