@@ -1,5 +1,5 @@
 PACKAGES=batteries,str
-SOURCES=day01.ml day02.ml day03.ml day04.ml day05.ml day06.ml day07.ml
+SOURCES=day01.ml day02.ml day03.ml day04.ml day05.ml day06.ml day07.ml day08.ml
 
 all: byte
 	@echo "Merry Christmas!"
