@@ -59,34 +59,50 @@ let find_bot bots lowval highval =
     BatList.mem lowval bot.chips && BatList.mem highval bot.chips in
   Bots.filter test bots |> Bots.enum |> BatEnum.get
 
+let outputs = BatHashtbl.create 50
+                                          
 let cycle bots =
   let twochips = Bots.filterv (fun bot -> BatList.length bot.chips = 2) bots |> Bots.enum in
-  let c = BatEnum.fold (fun c (id, bot) ->
+  BatEnum.fold (fun c (id, bot) ->
       let a, b = (BatList.at bot.chips 0), (BatList.at bot.chips 1) in
       let low, high = if a < b then a,b else b,a in
       bot.chips <- [];
       begin match bot.low with
-      | Output _ -> ()
+      | Output o -> BatHashtbl.modify_def low o (fun _ -> low) outputs
       | Bot b ->
          let newbot = Bots.find b bots in
          newbot.chips <- low :: newbot.chips
       end;
       begin match bot.high with
-      | Output _ -> ()
+      | Output o -> BatHashtbl.modify_def high o (fun _ -> high) outputs
       | Bot b ->
          let newbot = Bots.find b bots in
          newbot.chips <- high :: newbot.chips
-      end;
-      c + 1) 0 twochips in
-  (* BatPrintf.printf "%d bots looked at.\n" c;           *)
+      end) () twochips;
   bots
     
-let rec cycle_until bots =
-  match find_bot bots 17 61 with
-  | Some (id, bot) -> BatPrintf.printf "Part 1: %d\n" id
-  | None ->
-     let b = cycle bots in
-     cycle_until b
+let rec cycle_until bots cmpfound outsfound =
+  if not (cmpfound && outsfound) then begin
+      let cf = ref cmpfound
+      and ouf = ref outsfound in
+      if not cmpfound then begin
+        match find_bot bots 17 61 with
+        | Some (id, bot) -> BatPrintf.printf "Part 1: %d\n" id;
+                            cf := true
+        | None -> ()
+        end;
+      if not outsfound then begin
+          match BatHashtbl.find_option outputs 0,
+                BatHashtbl.find_option outputs 1,
+                BatHashtbl.find_option outputs 2 with
+          | Some a, Some b, Some c ->
+             BatPrintf.printf "Part 2: %d\n" (a * b * c);
+             ouf := true
+          | _ -> ()
+        end;
+      let b = cycle bots in
+      cycle_until b !cf !ouf
+    end
 
 let dest_to_string = function
   | Bot b -> "Bot " ^ (string_of_int b)
@@ -108,6 +124,6 @@ let print_bots =
                  
 let _ =
   let bots = BatIO.lines_of stdin |> BatEnum.fold build Bots.empty in
-  print_bots bots;
-  cycle_until bots
+  (*  print_bots bots; *)
+  cycle_until bots false false
   
