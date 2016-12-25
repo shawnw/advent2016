@@ -2,8 +2,6 @@ open Batteries
 
 type location = Open | Wall
 
-type coord = int * int * location * int
-                         
 let magic = ref 10 (* 1358 *)
               
 let location_type x y =
@@ -13,16 +11,6 @@ let location_type x y =
     Open
   else
     Wall
-
-let print_map width height =
-  for y = 0 to height do
-    for x = 0 to width do
-        match location_type x y with
-        | Open -> print_char '.'
-        | Wall -> print_char '#'
-    done;
-    print_newline ();
-  done
 
 type point = { x : int; y : int }
 
@@ -37,8 +25,6 @@ let min_score candidates distances =
     BatHashtbl.fold
       (fun p v (pmin, dmin) ->
         let score = find_score distances p in
-(*        BatPrintf.printf "min_score: Looking at {x=%d;y=%d;s=%d}\n"
-                         p.x p.y score; *)
         if score < dmin then
           (p, score)
         else
@@ -70,7 +56,6 @@ let astar start goal =
   try
     while not @@ BatHashtbl.is_empty candidates do
       let current = min_score candidates guess_distances in
-      (*      BatPrintf.printf "Looking at {x=%d;y=%d}\n" current.x current.y; *)
       if current = goal then
         raise (Found current);
       BatHashtbl.remove candidates current;
@@ -93,13 +78,30 @@ let astar start goal =
   with Found p -> BatHashtbl.find calculated_distances p
                                                             
 
+let rec expand n tbl prev =
+  if n = 0 then
+    BatHashtbl.length tbl
+  else
+    begin
+      let neighbors = BatList.map get_neighbors prev
+                      |> BatList.concat
+                      |> BatList.filter (fun p -> not @@ BatHashtbl.mem tbl p) in
+      BatList.iter (fun p -> BatHashtbl.replace tbl p true) neighbors;
+      expand (n - 1) tbl neighbors
+    end
+            
+
 let _ =
   let starting_point = { x = 1; y = 1 } in
   let test_len = astar starting_point { x = 7; y = 4 } in
   BatPrintf.printf "Test: Shortest path length is %d\n" test_len;
   magic := 1358;
   let part1_len = astar starting_point { x = 31; y = 39 } in
-  BatPrintf.printf "Part 1: Shortest path length is %d\n" part1_len
+  BatPrintf.printf "Part 1: Shortest path length is %d\n" part1_len;
+  let part2_table = BatHashtbl.create 1000 in
+  BatHashtbl.add part2_table starting_point true;
+  let part2_count = expand 50 part2_table [ starting_point ] in
+  BatPrintf.printf "Part 2: Rooms reachable in 50 steps: %d\n" part2_count
                   
 
                         
