@@ -4,9 +4,7 @@ type register = Reg of int
 
 type op = CopyR of (register * register) | CopyC of (int * register)
           | Add of (register * int) | JnzR of (register * int)
-          | JnzC of (int * int)
-                             
-let registers = BatArray.make 4 0
+          | JnzC of (int * int)                            
 
 let char_to_reg = function
   | 'a' | 'A' -> Reg 0
@@ -61,7 +59,7 @@ let parse line =
   BatOption.get instr
 
                 
-let eval sp instrs =
+let eval sp instrs registers =
   match instrs.(!sp) with
   | CopyC (x, Reg y) -> registers.(y) <- x
   | CopyR (Reg r, Reg y) ->
@@ -77,12 +75,23 @@ let eval sp instrs =
                 
 let _ =
   let sp = ref 0
+  and registers = BatArray.make 4 0
   and instrs = BatIO.lines_of stdin |> BatEnum.map parse |> BatArray.of_enum in
   while !sp < BatArray.length instrs do
-    eval sp instrs;
+    eval sp instrs registers;    
     incr sp
   done;
-  BatPrintf.printf "Part 1: a = %d\n" registers.(0)
+  BatPrintf.printf "Part 1: a = %d\n" registers.(0);
+  sp := 0;
+  BatArray.fill registers 0 4 0;
+  registers.(2) <- 1;
+  while !sp < BatArray.length instrs do
+    eval sp instrs registers;
+    incr sp
+  done;
+  BatPrintf.printf "Part 2: a = %d\n" registers.(0);
+  
+                   
                    
   
                                 
