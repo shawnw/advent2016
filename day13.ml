@@ -33,6 +33,7 @@ module PointAstar =
         let guess_distance p1 p2 =
           BatInt.abs (p1.x - p2.x) + BatInt.abs (p1.y - p2.y)
         let neighbors = get_neighbors
+        let compare (a:t) (b:t) = compare a b
         let equal (a:t) (b:t) = a = b
         let hash = BatHashtbl.hash
       end)
