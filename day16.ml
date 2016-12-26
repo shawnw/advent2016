@@ -36,7 +36,11 @@ let find_checksum seed len =
 
            
 let _ =
+  let input = "00101000101111010" in
   BatPrintf.printf "Test checksum: %s\n"
                    (find_checksum "10000" 20);
   BatPrintf.printf "Part 1 checksum: %s\n"
-                   (find_checksum "00101000101111010" 272)
+                   (find_checksum input 272);
+  BatPrintf.printf "Part 2 checksum: %s\n"
+                   (find_checksum input 35651584)
+                   
