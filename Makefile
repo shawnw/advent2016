@@ -1,7 +1,8 @@
-PACKAGES=batteries,str
+PACKAGES=batteries
+
 SOURCES=day01.ml day02.ml day03.ml day04.ml day05.ml day06.ml day07.ml \
 	day08.ml day09.ml day10.ml day11.ml day11v2.ml \
-	day12.ml day13.ml day14.ml day15.ml day16.ml
+	day12.ml day13.ml day14.ml day15.ml day16.ml day17.ml
 
 all: byte
 	@echo "Merry Christmas!"
@@ -16,7 +17,10 @@ clean:
 	rm -rf _build
 
 %.byte : %.ml
-	ocamlbuild -use-ocamlfind -cflags -safe-string $@ -pkgs $(PACKAGES)
+	ocamlbuild -use-ocamlfind $@ -pkgs $(PACKAGES)
 
 %.native: %.ml
-	ocamlbuild -cflags -unsafe,-safe-string -use-ocamlfind $@ -pkgs $(PACKAGES)
+	ocamlbuild -use-ocamlfind $@ -pkgs $(PACKAGES)
+
+day13.ml: astar.mli astar.ml
+

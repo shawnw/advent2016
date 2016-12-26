@@ -19,8 +19,8 @@ let new_direction d r =
   | West -> North
 
 let to_direction = function
-  | "L" -> Left
-  | "R" -> Right
+  | 'L' -> Left
+  | 'R' -> Right
   | _ -> raise (Invalid_argument "Direction must be L or R")
 
 let adjust dir dist pos =
@@ -29,18 +29,14 @@ let adjust dir dist pos =
   | East -> { pos with x = pos.x + dist }
   | South -> { pos with y = pos.y - dist }
   | West -> { pos with x = pos.x - dist }
-
-let re = Str.regexp " *\\([LR]\\)\\([0-9]+\\) *"
-
-let move dir (d, pos) = 
-  if Str.string_match re dir 0 then begin
-    let r = Str.matched_group 1 dir |> to_direction
-    and dist = Str.matched_group 2 dir |> int_of_string in
-    let newdir = new_direction d r in
-    (newdir, adjust newdir dist pos)
-  end else
-    raise (Invalid_argument ("Invalid direction string: " ^ dir))
-
+              
+let move dir (d, pos) =
+  BatScanf.sscanf dir " %c%d "
+                  (fun way dist ->
+                    let r = to_direction way in
+                    let newdir = new_direction d r in
+                    (newdir, adjust newdir dist pos))
+                  
 let taxi orig dest =
   let a1 = abs (orig.x - dest.x)
   and a2 = abs (orig.y - dest.y) in
