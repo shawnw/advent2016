@@ -8,4 +8,8 @@ module type LocationType =
   end
 module Make :
   functor (Location : LocationType) ->
-    sig val distance : Location.t -> Location.t -> int end
+  sig
+    val distance : Location.t -> Location.t -> int
+    val path : Location.t -> Location.t -> Location.t list
+    val find: Location.t -> Location.t -> Location.t list * int
+  end

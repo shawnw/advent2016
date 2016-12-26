@@ -55,12 +55,19 @@ let rec expand n tbl (prev: point list) =
                  end) in
       expand (n - 1) tbl neighbors
     end
-            
+
+let rec print_path = function
+  | [] -> print_newline ();
+  | hd :: [] -> BatPrintf.printf "(%d,%d)\n" hd.x hd.y
+  | hd :: tl ->
+     BatPrintf.printf "(%d,%d) -> " hd.x hd.y;
+     print_path tl
 
 let _ =
   let starting_point = { x = 1; y = 1 } in
-  let test_len = PointAstar.distance starting_point { x = 7; y = 4 } in
+  let (test_path, test_len) = PointAstar.find starting_point { x = 7; y = 4 } in
   BatPrintf.printf "Test: Shortest path length is %d\n" test_len;
+  print_path test_path;  
   magic := 1358;
   let part1_len = PointAstar.distance starting_point { x = 31; y = 39 } in
   BatPrintf.printf "Part 1: Shortest path length is %d\n" part1_len;
