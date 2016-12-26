@@ -22,28 +22,32 @@ let find_neighbors room hash =
   if is_open hash.[3] && room.y < 3 then
     neighbors := ({room with y = room.y + 1 }, 'R') :: !neighbors;
   !neighbors                                                        
-   
-let rec pathfind_helper current_room pathsofar seed n paths =
-  if current_room = end_room then
-    paths := pathsofar :: !paths
-  else if n < 50 then
-    begin
-      let hash = BatDigest.string (seed ^ pathsofar) |> BatDigest.to_hex in
-      find_neighbors current_room hash
-      |> BatList.iter (fun (neighbor, dir) ->
-             let newpath = BatPrintf.sprintf "%s%c" pathsofar dir in
-             pathfind_helper neighbor newpath seed (n + 1) paths)
-    end
+
+module RoomAStar =
+  Astar.Make(struct
+              type t = point * string * string
+
+              let guess_distance (a, _, _) (b, _, _) =
+                BatInt.abs (a.x - b.x) + BatInt.abs (a.y - b.y)
+              
+                                 
+              let neighbors (room, pathsofar, seed) =
+                let hash =
+                  BatDigest.string (seed ^ pathsofar) |> BatDigest.to_hex in
+                find_neighbors room hash
+                |> BatList.map (fun (r,d) ->
+                       ((r, (BatPrintf.sprintf "%s%c" pathsofar d), seed), 1))
+
+              let compare (a, _, _) (b, _, _) = compare a b
+              let equal = (=)
+              let hash = BatHashtbl.hash 
+            end)
 
 let pathfind seed =
-    let paths = ref [] in
-    pathfind_helper start_room "" seed 0 paths;
-    let (paths, _) =
-      BatList.map (fun path -> (path, BatString.length path)) !paths
-      |> BatList.sort (fun (_,a) (_,b) -> compare a b)
-      |> BatList.split in
-    BatList.first paths
-      
+  let p = RoomAStar.path (start_room, "", seed) (end_room, "", seed) in
+  let (_, path, _) = BatList.last p in
+  path
+               
 let _ = 
   let test1 = pathfind "ihgpwlah" in
   BatPrintf.printf "Test 1: %s\n" test1;
