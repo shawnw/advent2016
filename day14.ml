@@ -1,6 +1,6 @@
 open Batteries
 
-let hashes = BatHashtbl.create 250_000
+let hashes = BatHashtbl.create 35_000
                                
 exception Found of char
                                
@@ -53,6 +53,7 @@ let is_key salt n stretched =
 
 let find_64th_key salt stretched =
   let counter = ref 0 in
+  BatHashtbl.clear hashes;
   for i = 1 to 64 do
     while not @@ is_key salt !counter stretched do
       incr counter
@@ -64,13 +65,10 @@ let find_64th_key salt stretched =
 let _ =
   let test = find_64th_key "abc" false in
   BatPrintf.printf "Test 1: Index %d\n" test;
-  BatHashtbl.clear hashes;
   let test2 = find_64th_key "abc" true in
   BatPrintf.printf "Test 2: Index %d\n" test2;
-  BatHashtbl.clear hashes;
   let part1 = find_64th_key "jlmsuwbz" false in
   BatPrintf.printf "Part 1: Index %d\n" part1;
-  BatHashtbl.clear hashes;
   let part2 = find_64th_key "jlmsuwbz" true in
   BatPrintf.printf "Part 2: Index %d\n" part2
     
