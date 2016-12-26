@@ -15,9 +15,7 @@ let rec valid_state t = function
        valid_state (t + 1) tl
      else
        false
-  
-                  
-                  
+                                
 let find_start_time discs =
   let t = ref 0 in
   while not @@ valid_state !t discs do
@@ -28,7 +26,9 @@ let find_start_time discs =
 let _ =
   let discs = input_discs () in
   let t = find_start_time discs in
-  BatPrintf.printf "Part 1: Drop at time %d\n" t
+  BatPrintf.printf "Part 1: Drop at time %d\n" t;
+  let t2 = find_start_time (discs @ [ { positions = 11; starting = 0 } ]) in
+  BatPrintf.printf "Part 2: Drop at time %d\n" t2
   
 
                              
