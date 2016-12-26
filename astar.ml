@@ -2,6 +2,7 @@ module type LocationType = sig
   type t
   val guess_distance: t -> t -> int
   val neighbors: t -> (t * int) list
+  val compare: t -> t -> int
   val equal: t -> t -> bool
   val hash: t -> int
 end
@@ -54,7 +55,7 @@ end = struct
   try
     while not @@ Hash.is_empty candidates do
       let current = min_score candidates guess_distances in
-      if current = goal then
+      if (Location.compare current goal) = 0 then
         raise (Found current);
       Hash.remove candidates current;
       Hash.add visited current true;

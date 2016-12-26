@@ -3,6 +3,7 @@ module type LocationType =
     type t
     val guess_distance : t -> t -> int
     val neighbors : t -> (t * int) list
+    val compare : t -> t -> int
     val equal : t -> t -> bool
     val hash : t -> int
   end
