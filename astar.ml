@@ -19,23 +19,36 @@ end = struct
   exception Found of Location.t  
 
   module Hash = BatHashtbl.Make(Location)
-                       
+
   let find_score tbl p =
     Hash.find_default tbl p BatInt.max_num
 
-  let min_score candidates distances =
-    match
-      Hash.fold
-        (fun p v (pmin, dmin) ->
-          let score = find_score distances p in
-          if score < dmin then
-            (Some p, score)
-          else
-            (pmin, dmin)) candidates (None, BatInt.max_num)
-    with
-    | Some p, _ -> p
-    | None, _ -> raise Not_found
+  let cmp_dist (a, _) (b, _) = BatInt.compare a b
 
+  let rec rev_and_append lst trail =
+    match lst with
+    | [] -> trail
+    | hd :: tl -> rev_and_append tl (hd :: trail)
+                                              
+  let insert_sorted v lst =
+    let rec helper acc = function
+      | [] -> List.rev (v :: acc)
+      | hd :: tl as rest when cmp_dist v hd < 0 ->
+         rev_and_append acc (v :: rest)
+      | hd :: tl -> helper (hd :: acc) tl in
+    helper [] lst
+     (*
+    BatList.merge cmp_dist lst [v]
+      *)
+
+  let remove_all lst item =
+    lst := BatList.filter (fun (_, loc) -> not @@ Location.equal item loc) !lst
+           
+  let min_score candidates distances =
+    let (_, loc) =
+      BatList.find (fun (_, loc) -> Hash.mem candidates loc) !distances in
+    loc
+                                       
   let build_path came_from current =
     let total_path = ref [ current ] in
     let point = ref current in
@@ -50,17 +63,17 @@ end = struct
     let visited = Hash.create initial_guess
     and candidates = Hash.create initial_guess
     and came_from = Hash.create initial_guess
-    and guess_distances = Hash.create initial_guess
+    and guess_distances = ref [ initial_guess, start ]
     and calculated_distances = Hash.create initial_guess in
     Hash.add candidates start true;
     Hash.add calculated_distances start 0;
-    Hash.add guess_distances start (Location.guess_distance start goal);
   try
     while not @@ Hash.is_empty candidates do
       let current = min_score candidates guess_distances in
       if (Location.compare current goal) = 0 then
         raise (Found current);
       Hash.remove candidates current;
+      remove_all guess_distances current;
       Hash.add visited current true;
       let neighbors = Location.neighbors current    
       and tentative_score = find_score calculated_distances current in
@@ -74,7 +87,10 @@ end = struct
                 begin
                   Hash.add came_from p current;
                   Hash.add calculated_distances p tentative_score;
-                  Hash.add guess_distances p (tentative_score + (Location.guess_distance p goal))                  
+                  guess_distances :=
+                    insert_sorted
+                      (tentative_score + (Location.guess_distance p goal), p)
+                      !guess_distances
                 end              
             end) neighbors;
     done;
