@@ -1,3 +1,5 @@
+val taxi_distance: int -> int -> int -> int -> int
+
 module type LocationType =
   sig
     type t

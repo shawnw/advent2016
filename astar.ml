@@ -1,3 +1,6 @@
+let taxi_distance x1 y1 x2 y2 =
+  BatInt.abs (x1 - x2) + BatInt.abs (y1 - y2)
+
 module type LocationType = sig
   type t
   val guess_distance: t -> t -> int

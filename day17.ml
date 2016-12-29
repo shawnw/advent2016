@@ -28,7 +28,7 @@ module Shortest =
     type t = point * string * string
                                 
     let guess_distance (a, _, _) (b, _, _) =
-      BatInt.abs (a.x - b.x) + BatInt.abs (a.y - b.y)
+      Astar.taxi_distance a.x a.y b.x b.y
                                           
     let neighbors (room, pathsofar, seed) =
       let hash =

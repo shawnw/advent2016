@@ -37,10 +37,7 @@ let move dir (d, pos) =
                     let newdir = new_direction d r in
                     (newdir, adjust newdir dist pos))
                   
-let taxi orig dest =
-  let a1 = abs (orig.x - dest.x)
-  and a2 = abs (orig.y - dest.y) in
-  a1 + a2
+let taxi orig dest = Astar.taxi_distance orig.x orig.y dest.x dest.y
 
 let rec add_points cache orig dest =
   if orig = dest then
