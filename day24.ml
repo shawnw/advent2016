@@ -37,16 +37,6 @@ let parse lines =
 
 let grid = BatIO.lines_of stdin |> parse
 
-let print_grid () =
-  for y = 0 to BatArray.length grid - 1 do
-    for x = 0 to BatArray.length grid.(y) - 1 do
-      match grid.(y).(x) with
-      | Floor -> print_char '.'
-      | Wall -> print_char '#'
-    done;
-    print_newline ();
-  done
-                                     
 module ShortestPath =
   Astar.Make(struct
               type t = int * int
@@ -80,16 +70,13 @@ let shortest_path start allspots =
         BatList.fold_left (fun (s1,x1,y1) (s2,x2,y2) ->
             if !dist < !mindist then
               begin
-                let c1 = min s1 s2
-                and c2 = max s1 s2 in
-                BatHashtbl.modify_opt
-                  (c1,c2) (function
-                           | Some x -> Some x
-                           | None ->
-                              Some (ShortestPath.distance (x1,y1) (x2,y2)))
-                  cache;
-                let d = BatHashtbl.find cache (c1,c2) in
-                dist := !dist + d
+                let pair = min s1 s2, max s1 s2 in
+                match BatHashtbl.find_option cache pair with
+                | Some d -> dist := !dist + d
+                | None ->
+                   let d = ShortestPath.distance (x1,y1) (x2,y2) in
+                   BatHashtbl.add cache pair d;
+                   dist := !dist + d
               end;
             (s2,x2,y2)) start spots in
             mindist := min !mindist !dist;
@@ -97,9 +84,8 @@ let shortest_path start allspots =
   !mindist
             
 let _ =
-  let spots = BatList.sort comploc !locations in
-  let start = BatList.find (fun (a,_,_) -> a = 0) spots in
-  let spots = BatList.filter (fun (a,_,_) -> a > 0) spots in
+  let start = BatList.find (fun (a,_,_) -> a = 0) !locations in
+  let spots = BatList.remove !locations start in
   let allspots = genperms spots in
   BatPrintf.printf "Looking at routes through %d locations. There are %d permutations.\n%!" (BatList.length spots) (BatList.length allspots);
   let d = shortest_path start allspots in
