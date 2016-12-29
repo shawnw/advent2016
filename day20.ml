@@ -10,11 +10,11 @@ let _ =
              BatScanf.sscanf line "%d-%d" (fun lo hi -> BatISet.add_range lo hi iset)
            else
              BatISet.add (int_of_string line) iset) BatISet.empty in
-  let max_number = 4294967295 in
-  let lowest = ref 0 in
-  while BatISet.mem !lowest blacklist do
-    incr lowest
-  done;
-  BatPrintf.printf "Part 1: Lowest valid number: %d\n" !lowest;
-  let blacklist_size = BatISet.cardinal blacklist in
-  BatPrintf.printf "Part 2: Total valid numbers: %d\n" (max_number + 1 - blacklist_size)
+  let max_num = 4294967295 in
+  let whitelist = BatISet.compl blacklist
+                  |> BatISet.remove_range BatInt.min_num (-1)
+                  |> BatISet.remove_range (max_num + 1) BatInt.max_num in
+  let lowest = BatISet.min_elt whitelist
+  and count = BatISet.cardinal whitelist in
+  BatPrintf.printf "Part 1: Lowest valid number: %d\n" lowest;
+  BatPrintf.printf "Part 2: Total valid numbers: %d\n" count
