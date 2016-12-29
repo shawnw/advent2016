@@ -70,37 +70,40 @@ module ShortestPath =
               let hash = BatHashtbl.hash
             end)
 
-let _ =
+let cache = BatHashtbl.create 100
+            
+let shortest_path start allspots =
   let mindist = ref BatInt.max_num in
-  let spots = BatList.sort comploc !locations in
-  let start = BatList.find (fun (a,_,_) -> a = 0) spots in
-  let spots = BatList.filter (fun (a,_,_) -> a > 0) spots in
-  let allspots = genperms spots in
-  BatPrintf.printf "Looking at routes through %d locations. There are %d permutations.\n%!" (BatList.length spots) (BatList.length allspots);
   BatList.iter (fun spots ->
       let dist = ref 0 in
       let _ = 
         BatList.fold_left (fun (s1,x1,y1) (s2,x2,y2) ->
             if !dist < !mindist then
               begin
-                let d = ShortestPath.distance (x1,y1) (x2,y2) in
+                let c1 = min s1 s2
+                and c2 = max s1 s2 in
+                BatHashtbl.modify_opt
+                  (c1,c2) (function
+                           | Some x -> Some x
+                           | None ->
+                              Some (ShortestPath.distance (x1,y1) (x2,y2)))
+                  cache;
+                let d = BatHashtbl.find cache (c1,c2) in
                 dist := !dist + d
               end;
             (s2,x2,y2)) start spots in
             mindist := min !mindist !dist;
     ) allspots;
-  BatPrintf.printf "Part 1: Shortest total distance %d\n%!" !mindist;
-  mindist := BatInt.max_num;
-  BatList.iter (fun spots ->
-      let dist = ref 0 in
-      let _ = 
-        BatList.fold_left (fun (s1,x1,y1) (s2,x2,y2) ->
-            if !dist < !mindist then
-              begin
-                let d = ShortestPath.distance (x1,y1) (x2,y2) in
-                dist := !dist + d
-              end;
-            (s2,x2,y2)) start spots in
-      mindist := min !mindist !dist
-    ) (BatList.map (fun lst -> lst @ [start]) allspots);
-  BatPrintf.printf "Part 2: Shortest distance ending back at 0: %d\n" !mindist
+  !mindist
+            
+let _ =
+  let spots = BatList.sort comploc !locations in
+  let start = BatList.find (fun (a,_,_) -> a = 0) spots in
+  let spots = BatList.filter (fun (a,_,_) -> a > 0) spots in
+  let allspots = genperms spots in
+  BatPrintf.printf "Looking at routes through %d locations. There are %d permutations.\n%!" (BatList.length spots) (BatList.length allspots);
+  let d = shortest_path start allspots in
+  BatPrintf.printf "Part 1: Shortest total distance %d\n%!" d;
+  let allspots2 = BatList.map (fun lst -> lst @ [start]) allspots in
+  let d = shortest_path start allspots2 in
+  BatPrintf.printf "Part 2: Shortest distance ending back at 0: %d\n" d
