@@ -6,6 +6,10 @@ let is_magic md5 =
   BatChar.code md5.[0] lor BatChar.code md5.[1] lor
     (BatChar.code md5.[2] land 0xF0) = 0
 
+let hexdigits = "0123456789abcdef"
+(* 0 <= n <= 15 *)
+let of_hexdigit n = hexdigits.[n]
+                                         
 let find_password seed =
   let password1 = BatString.create 8
   and password2 = BatString.make 8 '_'
@@ -20,15 +24,16 @@ let find_password seed =
       md5 := BatDigest.string (make !i)
     done;
     incr i;
-    let md5hex = BatDigest.to_hex !md5 in
+    let char6 = of_hexdigit (BatChar.code !md5.[2] land 0x0F) in
     if !idx1 < 8 then begin
-        BatString.set password1 !idx1 md5hex.[5];
+        BatString.set password1 !idx1 char6;
         incr idx1
       end;
-    if BatChar.is_digit md5hex.[5] then begin
-        let n = BatChar.code md5hex.[5] - BatChar.code '0' in
+    if BatChar.is_digit char6 then begin
+        let n = BatChar.code char6 - BatChar.code '0' in
         if n < 8 && password2.[n] = '_' then begin
-            BatString.set password2 n md5hex.[6];
+            let char7 = of_hexdigit (BatChar.code !md5.[3] asr 4) in
+            BatString.set password2 n char7;
             incr idx2
           end
       end              
@@ -37,9 +42,9 @@ let find_password seed =
 
 let finder seed =
   let pass1, pass2 = find_password seed in
-  Printf.printf "For %s:\n" seed;
-  Printf.printf "1: %s\n" pass1;
-  Printf.printf "2: %s\n" pass2
+  BatPrintf.printf "For %s:\n" seed;
+  BatPrintf.printf "1: %s\n" pass1;
+  BatPrintf.printf "2: %s\n" pass2
 
 let _ =
   finder Sys.argv.(1)
