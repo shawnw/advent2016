@@ -104,12 +104,11 @@ let floor_of_gen bld g =
 let print_building bld =
   BatPrintf.printf "{ elv = %d" bld.elv;
   for n = 0 to 3 do
-    BatPrintf.printf "; floor%d.chips = 0x%X; floor%d.gens = 0x%X" n (get_chipsi bld n) n (get_gensi bld n)
+    BatPrintf.printf "; floor%d.chips = 0x%X; floor%d.gens = 0x%X"
+                     n (get_chipsi bld n) n (get_gensi bld n)
   done;
   print_char '}'
 
-
-      
 let move_to_floor bld fl mask =
   let mask = BatInt64.of_int mask in
   let stripped =
@@ -160,8 +159,22 @@ let normalize bld =
   for n = 0 to 7 do
     pairs := (floor_of_chip bld n, floor_of_gen bld n) :: !pairs
   done;
-  (bld.elv, BatList.sort compare !pairs)
-                        
+  BatList.sort compare !pairs |>
+    BatList.fold_left (fun n (chip,gen) ->
+        BatInt64.logor
+          (BatInt64.logor
+             (BatInt64.shift_left (BatInt64.of_int chip) 3)
+             (BatInt64.of_int gen))
+          (BatInt64.shift_left n 6)
+      ) (BatInt64.of_int bld.elv)
+
+module Hash64 = BatHashtbl.Make(
+                    struct
+                      type t = int64
+                      let equal (a:int64) (b:int64) = a = b
+                      let hash = BatHashtbl.hash
+                    end)
+
 let transitions bld dir =
   let flr = match dir with | Up -> bld.elv + 1 | Down -> bld.elv - 1 in
   if flr < 0 || flr > 3 then
@@ -174,25 +187,29 @@ let transitions bld dir =
       and gens = get_gensi bld bld.elv in
       let (cones, ctwos) = BatHashtbl.find states chips
       and (gones, gtwos) = BatHashtbl.find states gens in
-      let gones = BatList.map (fun mask -> mask lsl 8) gones
-      and gtwos = BatList.map (fun mask -> mask lsl 8) gtwos in
+      let shift = fun mask -> mask lsl 8 in
+      let gones = BatList.map shift gones
+      and gtwos = BatList.map shift gtwos in
       let pairs = BatList.filter_map (fun mask ->
                       if gens land mask == mask then
                         Some (mask lor (mask lsl 8))
                       else
                         None) cones in
       let moves = ctwos @ gtwos @ cones @ gones @ pairs in
-      let normalized = BatHashtbl.create 1000 in
+      let normalized = Hash64.create (BatList.length moves) in
       BatList.filter_map (fun mask ->
           let newbld = move_to_floor bld flr mask in
           let normbld = normalize newbld in
-          if BatHashtbl.mem normalized normbld then
+          if Hash64.mem normalized normbld then
             None
           else if invalid_state newbld bld.elv || invalid_state newbld flr then
+            begin
+              Hash64.add normalized normbld true;
               None
+            end
           else
             begin
-              BatHashtbl.replace normalized normbld true;
+              Hash64.add normalized normbld true;
               Some newbld
             end) moves
     end
@@ -201,51 +218,45 @@ let print_hist choices =
   print_char '(';              
   BatList.iter (fun choice -> print_building choice; print_char ' ') choices;
   print_endline ")"
-                
+
+let choices dir prev visited =
+  BatList.map (fun (bld, _) -> transitions bld dir) prev
+  |> BatList.concat 
+  |> BatList.filter_map
+       (fun bld ->
+         let normbld = normalize bld in
+         if Hash64.mem visited normbld then
+           None
+         else
+           Some (bld, normbld))
+
 let rec search goal prev depth visited =
-  let upchoices =
-    BatList.map (fun (bld, _) -> transitions bld Up) prev
-    |> BatList.concat 
-    |> BatList.filter_map
-         (fun bld ->
-           let normbld = normalize bld in
-           if BatHashtbl.mem visited normbld then
-             None
-           else
-             Some (bld, normbld)) in
+  let upchoices = choices Up prev visited in
   if BatList.mem_assoc goal upchoices then
       depth
   else
     begin           
-      let downchoices =
-        BatList.map (fun (bld, _) -> transitions bld Down) prev
-        |> BatList.concat
-        |> BatList.filter_map
-             (fun bld ->
-               let normbld = normalize bld in
-               if BatHashtbl.mem visited normbld then
-                 None
-               else
-                 Some (bld, normbld)) in
-      let choices = upchoices @ downchoices |> BatList.unique_cmp ~cmp:(fun (_, norma) (_, normb) -> compare norma normb)
-
+      let downchoices = choices Down prev visited in
+      let choices =
+        upchoices @ downchoices
+        |> BatList.unique_cmp ~cmp:(fun (_, norma) (_, normb)
+                                    -> BatInt64.compare norma normb)
       in
       if BatList.is_empty choices then
           -1
       else
         begin
-          let visited = BatHashtbl.create (BatList.length prev) in 
+          let visited = Hash64.create (BatList.length prev) in 
           BatList.iter (fun (_,normbld)  ->
-              BatHashtbl.replace visited normbld true) prev;
+              Hash64.add visited normbld true) prev;
           search goal choices (depth + 1) visited
         end
     end
 
 let run start goal  =
-  let visited = BatHashtbl.create 2500 in
-  BatHashtbl.add visited (normalize start) true;
-  let d = search goal [start, normalize start] 1 visited in
-  d
+  let visited = Hash64.create 10 in
+  Hash64.add visited (normalize start) true;
+  search goal [start, normalize start] 1 visited
                        
 let test () = run test_start_state test_end_state
 let part1 () = run part1_start_state part1_end_state
